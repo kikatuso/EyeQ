@@ -1,0 +1,18 @@
+[project]
+name = "eyeq_grading"
+version = "0.1.0"
+description = "Pytorch Wrapper for EyeQ color fundus automatic quality assessment"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Zuzanna Wakefield-Skórniewska", email = "zuzanna.skorniewska@ndph.ox.ac.uk" }]
+requires-python = ">=3.8"
+dependencies = [
+  "torch",
+  "torchvision",
+  "pillow",
+  "scikit-image",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

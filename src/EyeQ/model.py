@@ -47,12 +47,10 @@ class EyeQ(nn.Module):
         x = self._preprocess(x)
         preds = [ nn.Softmax(dim=1)(model(x)) for model in self.models]
         average = torch.mean(torch.stack(preds), dim=0)
-        print(average)
         if self.return_probs:
             return average
         else:
-            return torch.argmax(average, dim=1)
-
+            return torch.argmax(average, dim=1), average 
 
 def Efficientnet_fl(pretrained):
     model = EfficientNet.from_pretrained('efficientnet-b4')

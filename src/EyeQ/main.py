@@ -7,7 +7,7 @@ from tqdm import tqdm
 from .model import EyeQ
 
 
-def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False):
+def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,resize=520,lightweight = False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dir_path = Path(dir_path).resolve()
@@ -23,13 +23,12 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False):
     bad_quality_dir.mkdir(exist_ok=True)
 
     transform = transforms.Compose([
-        transforms.Resize((380, 380)),
+        transforms.Resize((resize, resize)),
         transforms.ToTensor()
     ])
-
-    model = EyeQ().to(device)
+ 
+    model = EyeQ(lightweight=lightweight,verbose=verbose).to(device)
     model.eval()
-
     if verbose:
         print(f'Found {len(img_paths)} images in {dir_path}')
 
@@ -39,20 +38,19 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False):
     with torch.no_grad():
         for batch, paths in tqdm(dataloader, desc='Grading images'):
             batch = batch.to(device)
-            preds = model(batch)
+            preds, probs = model(batch)
 
-            for pred, img_path in zip(preds, paths):
+            for pred, prob, img_path in zip(preds, probs, paths):
                 img_path = Path(img_path)
-
-                if pred == 0:
+                cl = pred.item()
+                bad_prob = prob[2].item()  # probability of bad quality
+                if cl == 0 or (cl == 1 and bad_prob < 0.25):
                     print(f'{img_path}: good quality') if verbose else None
                     dest_path = good_quality_dir / img_path.name
                 else:
                     print(f'{img_path}: bad quality') if verbose else None
                     dest_path = bad_quality_dir / img_path.name
-
-                #img_path.rename(dest_path)
-                print('')
+                img_path.rename(dest_path)
 
 
 class SimpleDataset(Dataset):
