@@ -1,6 +1,6 @@
 # EyeQ — Retinal Image Quality Grading
 
-A clean, easy-to-use PyTorch wrapper for automated retinal fundus image quality grading. This package restructures the original [EyeQ](https://github.com/HzFu/EyeQ) project into a simple Python class, with support for checkpoints trained by [AutoMorph](https://github.com/rmaphoh/AutoMorph).
+A clean, easy-to-use PyTorch wrapper for automated retinal fundus image quality grading. This package restructures the original [EyeQ](https://github.com/HzFu/EyeQ) project into a simple Python class, with checkpoints trained by [AutoMorph](https://github.com/rmaphoh/AutoMorph).
 
 Images are automatically sorted into `good_quality/` and `bad_quality/` subdirectories within your input folder.
 
@@ -72,7 +72,7 @@ EyeQ.run_grading(
 | `batch_size` | `int` | `16` | Number of images processed per batch. Reduce if running out of GPU/CPU memory. |
 | `verbose` | `bool` | `False` | If `True`, prints per-image grading results to stdout. |
 | `resize` | `int` | `520` | Resolution images are resized to before inference (square). |
-| `lightweight` | `bool` | `False` | If `True`, uses a lighter model variant for faster inference at the cost of some accuracy. |
+| `lightweight` | `bool` | `False` | If `True`, uses a lighter a single checkpoint variant for faster inference. |
 
 ### Notes
 
