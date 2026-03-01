@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torchvision.transforms.functional import resize
 import glob 
+import os
 from efficientnet_pytorch import EfficientNet
 
 ## class meanings:
@@ -10,10 +11,16 @@ from efficientnet_pytorch import EfficientNet
 ## 2: bad quality
 
 
+
 class EyeQ(nn.Module):
     def __init__(self,checkpoint_path='checkpoints/efficientnet/',pretrained = True, lightweight=False,mode='eval',verbose=False,return_probs=False,resize=520):
         super(EyeQ, self).__init__()
         assert mode in ['train', 'eval'], "mode should be either 'train' or 'eval'"
+        
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(base_dir, "..", "..")) ## same level as src folder
+        checkpoint_path = os.path.join(project_root, checkpoint_path)
+
         checkpoints = glob.glob(checkpoint_path + '**/*.pth', recursive=True)
         self.return_probs = return_probs
         self.resize = resize
