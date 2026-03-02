@@ -48,9 +48,9 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,res
         if p.parent.name not in ('good_quality', 'bad_quality')]
 
     img_paths,num_corrupted,num_too_small = filter_images(img_paths,min_resolution = min_resolution,num_workers=filter_num_workers)
-    msg = f"Filtered {num_corrupted}"
+    msg = f"Filtered {num_corrupted} corrupted images"
     if min_resolution is not None:
-        msg += f" and {num_too_small}"
+        msg += f" and {num_too_small} too small images."
     print(msg)
 
     good_quality_dir = dir_path / 'good_quality'
