@@ -4,28 +4,41 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+
 from .model import EyeQ
 
-def filter_images(paths, min_resolution=None):
+
+def check_image(p, min_resolution):
+    try:
+        with Image.open(p) as img:
+            w, h = img.size  # header only, fast
+        if min_resolution is not None and (w < min_resolution or h < min_resolution):
+            return None, "small"
+        return p, None
+    except Exception:
+        return None, "corrupted"
+
+
+def filter_images(paths, min_resolution=None, num_workers=32):
     valid = []
     num_corrupted = 0
     num_too_small = 0
-    for p in tqdm(paths, desc='Filtering images'):
-        try:
-            with Image.open(p) as img:
-                w, h = img.size
-                img.verify()
-            if min_resolution is not None:
-                if w < min_resolution or h < min_resolution:
-                    num_too_small += 1
-                    continue
-            valid.append(p)
-        except Exception:
-            num_corrupted += 1
-
+    with ThreadPoolExecutor(max_workers=num_workers) as ex:
+        for result, flag in tqdm(
+            ex.map(lambda p: check_image(p, min_resolution), paths),
+            total=len(paths),
+            desc="Filtering images"
+        ):
+            if result is not None:
+                valid.append(result)
+            elif flag == "corrupted":
+                num_corrupted += 1
+            elif flag == "small":
+                num_too_small += 1
     return valid, num_corrupted, num_too_small
 
-def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,resize=520,lightweight = False,min_resolution=None):
+def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,resize=520,lightweight = False,min_resolution=None,filter_num_workers = 32):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dir_path = Path(dir_path).resolve()
@@ -34,7 +47,7 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,res
         p for p in dir_path.rglob(f'*{img_extension}')
         if p.parent.name not in ('good_quality', 'bad_quality')]
 
-    img_paths,num_corrupted,num_too_small = filter_images(img_paths,min_resolution = min_resolution)
+    img_paths,num_corrupted,num_too_small = filter_images(img_paths,min_resolution = min_resolution,num_workers=filter_num_workers)
     msg = f"Filtered {num_corrupted}"
     if min_resolution is not None:
         msg += f" and {num_too_small}"
