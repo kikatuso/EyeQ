@@ -73,6 +73,8 @@ EyeQ.run_grading(
 | `verbose` | `bool` | `False` | If `True`, prints per-image grading results to stdout. |
 | `resize` | `int` | `520` | Resolution images are resized to before inference (square). |
 | `lightweight` | `bool` | `False` | If `True`, uses a lighter a single checkpoint variant for faster inference. |
+| `min_resolution` | `int` | `None` | If int, pre-filters all images which are smaller than the min required resolution (height or width)|
+
 
 ### Notes
 
@@ -97,7 +99,8 @@ EyeQ.run_grading(
     batch_size=8,
     verbose=True,
     resize=448,
-    lightweight=True
+    lightweight=True,
+    min_resolution=224
 )
 ```
 
