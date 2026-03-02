@@ -6,29 +6,24 @@ from PIL import Image
 from tqdm import tqdm
 from .model import EyeQ
 
-def filter_corrupted(paths):
+def filter_images(paths, min_resolution=None):
     valid = []
     num_corrupted = 0
-    for p in paths:
+    num_too_small = 0
+    for p in tqdm(paths, desc='Filtering images'):
         try:
             with Image.open(p) as img:
-                img.verify()   
+                w, h = img.size
+                img.verify()
+            if min_resolution is not None:
+                if w < min_resolution or h < min_resolution:
+                    num_too_small += 1
+                    continue
             valid.append(p)
         except Exception:
-            num_corrupted+=1
-    return valid,num_corrupted
+            num_corrupted += 1
 
-def filter_by_min_resolution(paths, min_resolution):
-    valid = []
-    num_too_small = 0
-    for p in paths:
-        with Image.open(p) as img:
-            w, h = img.size   # header read only, no full decode
-            if w < min_resolution or h < min_resolution:
-                num_too_small += 1
-            else:
-                valid.append(p)
-    return valid, num_too_small
+    return valid, num_corrupted, num_too_small
 
 def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,resize=520,lightweight = False,min_resolution=None):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -39,11 +34,11 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,res
         p for p in dir_path.rglob(f'*{img_extension}')
         if p.parent.name not in ('good_quality', 'bad_quality')]
 
-    img_paths,num_corrupted = filter_corrupted(img_paths)
-    print(f'Removed {num_corrupted} corrupted files.')
+    img_paths,num_corrupted,num_too_small = filter_images(img_paths,min_resolution = min_resolution)
+    msg = f"Filtered {num_corrupted}"
     if min_resolution is not None:
-        img_path,num_small = filter_by_min_resolution(path,min_resolution = min_resolution)
-        
+        msg += f" and {num_too_small}"
+    print(msg)
 
     good_quality_dir = dir_path / 'good_quality'
     bad_quality_dir = dir_path / 'bad_quality'
