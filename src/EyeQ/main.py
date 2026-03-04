@@ -61,15 +61,14 @@ def run_grading(dir_path, img_extension='.png', batch_size=16, verbose=False,res
 def check_image(p, min_resolution):
     try:
         with Image.open(p) as img:
+            img.load()  # force full decode
             w, h = img.size
-
-        if min_resolution is not None and (w < min_resolution or h < min_resolution):
-            return p, "small"
-
+            if min_resolution is not None and (w < min_resolution or h < min_resolution):
+                return p, "small"
         return p, None
-
     except Exception:
         return p, "corrupted"
+
 
 def filter_images(paths, min_resolution=None, num_workers=32):
     valid = []
